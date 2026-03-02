@@ -211,7 +211,7 @@ if menu == "Report":
         # =========================
         PAGE_SIZE = 10
         total_items = len(filtered)
-        total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE
+        total_pages = max(1, (total_items + PAGE_SIZE - 1) // PAGE_SIZE)
 
         # reset page kalau filter berubah / report_type berubah
         sig = (report_type, start_date, end_date, show_running)
@@ -219,27 +219,12 @@ if menu == "Report":
             st.session_state["report_sig"] = sig
             st.session_state["report_page"] = 1
 
-        page = st.session_state.get("report_page", 1)
-        page = max(1, min(page, total_pages))
+        # init & clamp page
+        if "report_page" not in st.session_state:
+            st.session_state["report_page"] = 1
+        st.session_state["report_page"] = max(1, min(st.session_state["report_page"], total_pages))
 
-        ncol1, ncol2, ncol3, ncol4 = st.columns([1, 1, 2, 3])
-        with ncol1:
-            if st.button("Prev", disabled=(page <= 1)):
-                page -= 1
-        with ncol2:
-            if st.button("Next", disabled=(page >= total_pages)):
-                page += 1
-        with ncol3:
-            page = st.selectbox(
-                "Halaman",
-                options=list(range(1, total_pages + 1)),
-                index=page - 1
-            )
-        with ncol4:
-            st.write(f"Total: {total_items} item | {PAGE_SIZE}/halaman")
-
-        st.session_state["report_page"] = page
-
+        page = st.session_state["report_page"]
         start_idx = (page - 1) * PAGE_SIZE
         end_idx = start_idx + PAGE_SIZE
         page_items = filtered[start_idx:end_idx]
@@ -276,3 +261,34 @@ if menu == "Report":
                         file_name=f["invoice"],
                         mime="application/octet-stream"
                     )
+
+        # =========================
+        # Pagination controls (BOTTOM + CENTER)
+        # =========================
+        def _prev_page():
+            st.session_state["report_page"] = max(1, st.session_state["report_page"] - 1)
+
+        def _next_page(tp: int):
+            st.session_state["report_page"] = min(tp, st.session_state["report_page"] + 1)
+
+        # spacer - center - spacer
+        s1, c1, c2, c3, s2 = st.columns([4, 1, 1, 1, 4])
+
+        with c1:
+            st.button("Prev", on_click=_prev_page, disabled=(page <= 1))
+
+        with c2:
+            # page number selector (bind langsung ke session_state["report_page"])
+            st.selectbox(
+                "",
+                options=list(range(1, total_pages + 1)),
+                index=page - 1,
+                key="report_page",
+                label_visibility="collapsed"
+            )
+
+        with c3:
+            st.button("Next", on_click=lambda: _next_page(total_pages), disabled=(page >= total_pages))
+
+        # optional info di bawah tombol (kalau mau)
+        st.caption(f"Halaman {st.session_state['report_page']} / {total_pages} | Total {total_items} item")
