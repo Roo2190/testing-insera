@@ -378,6 +378,73 @@ ATURAN:
 OUTPUT SCHEMA (CONTENT ONLY, TANPA HEADER):
 {DETAIL_LINE_SCHEMA_TEXT}
 
+
+GENERAL KNOWLEDGE DETAIL:
+
+1. Output DETAIL merepresentasikan DATA PER LINE ITEM.
+
+2. invoice_customer_po_no pada Invoice:
+   - Jika invoice_customer_po_no bernilai "null", gunakan invoice_customer_po_no terakhir yang valid dari line item sebelumnya.
+
+3. inv_vendor_name pada Invoice:
+   - BUKAN berasal dari PT Insera Sena.
+   - Jika terdapat PT Insera Sena dan pihak lain → pilih yang BUKAN PT Insera Sena.
+
+4. inv_seq:
+   - inv_seq wajib numeric murni dan tidak boleh "null".
+   - inv_seq dihitung GLOBAL berdasarkan inv_customer_po_no yang sama untuk seluruh line item (index 1 sampai total_row), bukan dihitung ulang per batch.
+   - Definisi inv_seq per baris: inv_seq = hitung berapa kali inv_customer_po_no yang sama sudah muncul dari index 1 sampai index baris ini (termasuk baris ini).
+   Contoh: PO=112 muncul di index 2,5,6 → inv_seq untuk index 2=1, index 5=2, index 6=3.
+   - Untuk baris yang kamu keluarkan (index {first_index}..{last_index}), inv_seq tetap harus mengikuti hitungan global dari index 1..total_row.
+
+5. inv_spart_item_no:
+   - Jika tidak eksplisit → cek kolom ke-2 tabel item.
+   - Jika tetap tidak ada → "null".
+
+6. pl_messrs pada Packing List (PL):
+   - SELALU PT Insera Sena.
+   - Jika terdapat beberapa nama → pilih PT Insera Sena.
+
+7. Field po_* WAJIB diisi dengan STRING "null".
+
+8. Package unit pada Packing List (PL):
+   - Jika semua barang karton → CT
+   - Jika semua barang pallet → PX
+   - Jika barang campuran → PX
+   - Jika barang Bal → BL
+   - Selain itu → gunakan nilai asli.
+
+9. LC Logic pada Bill of Lading (BL):
+   - Jika bl_consignee_name mengandung nama perusahaan Bank → BL bertipe LC.
+   - Jika tidak → BL bukan bertipe LC.
+
+10. Jika pada dokumen Bill of Lading (BL) bertipe LC:
+    - bl_consignee_name diambil dari notify party
+    - bl_consignee_address diambil dari notify party
+
+11. inv_coo_commodity_origin
+   - SEBUTKAN NAMA NEGARANYA SAJA TIDAK PERLU TULISAN "Made In" yang penting nama negaranya dan tulisan dalam huruf besar semua.
+
+12. coo_seq:
+   - coo_seq adalah nomor urut line item PADA DOKUMEN CERTIFICATE OF ORIGIN (COO) SAJA.
+   - Jika terdapat nomor urut eksplisit pada dokumen COO, WAJIB gunakan nomor tersebut.
+   - JANGAN menghitung ulang berdasarkan jumlah item pada Invoice atau dokumen lain.
+   - Jika tidak terdapat nomor urut eksplisit pada dokumen COO, hitung berdasarkan urutan kemunculan line item DI DALAM DOKUMEN COO SAJA (dimulai dari 1).
+   - Jumlah coo_seq harus sama dengan jumlah line item pada dokumen COO.
+
+13. Bl_description dan bl_hs_code:
+   - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
+   - value bl_hs_code diisi sesuai dengan bl_descriptionnya
+   - Contoh:
+     FRAME PART A-F3306-1 HS NUMBER: 8714.91
+     FRAME PART A-HG009 HS NUMBER: 8714.91
+     FRAME PART A-HG011 HS NUMBER: 8714.91
+     FRAME PART A-HG045 HS NUMBER: 8714.91
+     FRAME TUBING HS NUMBER: 8714.91
+
+     pada inv_description ada value FRAME PART AF-9F-0270 (which is tidak ada), maka bl_description isi null saja
+     pada inv_description ada value FRAME PART A-HG009 (which is ada), maka bl_description isi FRAME PART A-HG009
+
 OUTPUT RESTRICTION:
 - Output HARUS dimulai '[' dan diakhiri ']'
 - Tidak boleh markdown/plan/teks lain.
