@@ -259,36 +259,34 @@ if menu == "Report":
                         label="Download",
                         data=file_bytes,
                         file_name=f["invoice"],
-                        mime="application/octet-stream"
+                        mime="application/octet-stream",
+                        key=f"dl_{report_type}_{f['invoice']}"  # ✅ unik
                     )
 
         # =========================
-        # Pagination controls (BOTTOM + CENTER)
+        # Pagination controls (BOTTOM + CENTER) => [Prev][Page][Next]
         # =========================
         def _prev_page():
             st.session_state["report_page"] = max(1, st.session_state["report_page"] - 1)
 
-        def _next_page(tp: int):
-            st.session_state["report_page"] = min(tp, st.session_state["report_page"] + 1)
+        def _next_page():
+            st.session_state["report_page"] = min(total_pages, st.session_state["report_page"] + 1)
 
         # spacer - center - spacer
-        s1, c1, c2, c3, s2 = st.columns([4, 1, 1, 1, 4])
+        s1, c1, c2, c3, s2 = st.columns([6, 1, 2, 1, 6])
 
         with c1:
-            st.button("Prev", on_click=_prev_page, disabled=(page <= 1))
+            st.button("Prev", on_click=_prev_page, disabled=(st.session_state["report_page"] <= 1), key="btn_prev")
 
         with c2:
-            # page number selector (bind langsung ke session_state["report_page"])
             st.selectbox(
-                "",
+                label="",
                 options=list(range(1, total_pages + 1)),
-                index=page - 1,
                 key="report_page",
                 label_visibility="collapsed"
             )
 
         with c3:
-            st.button("Next", on_click=lambda: _next_page(total_pages), disabled=(page >= total_pages))
+            st.button("Next", on_click=_next_page, disabled=(st.session_state["report_page"] >= total_pages), key="btn_next")
 
-        # optional info di bawah tombol (kalau mau)
-        st.caption(f"Halaman {st.session_state['report_page']} / {total_pages} | Total {total_items} item")
+        st.caption(f"Halaman {st.session_state['report_page']} / {total_pages} | Total {total_items} item | {PAGE_SIZE}/halaman")
