@@ -411,8 +411,8 @@ GENERAL KNOWLEDGE DETAIL:
 
 8. Package unit pada Packing List (PL) dan Invoice (INV):
    - PAHAMI TERLEBIH DAHULU PACKAGE UNIT APA YANG DIGUNAKAN PADA DOKUMEN
-   - Jika semua barang karton → CT
-   - Jika semua barang pallet → PX
+   - Jika semua barang karton (CTN) → CT
+   - Jika semua barang pallet (PLT) → PX
    - Jika barang campuran → PK, Contoh: ada dua unit, PLTS dan Carton, maka menjadi PX
    - Jika barang Bal → BL
    - Selain itu → gunakan nilai asli.
