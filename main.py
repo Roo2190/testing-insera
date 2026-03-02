@@ -92,24 +92,65 @@ if menu == "Report":
         ["detail", "total", "container"]
     )
 
-    # ... di menu Report ...
+    # =========================
+    # Filter UI (WIB)
+    # =========================
+    WIB = timezone(timedelta(hours=7))
 
+    # ambil semua blob dulu (nanti baru difilter)
     result_prefix = f"output/{report_type}/"
-
     result_blobs = list(storage_client.list_blobs(BUCKET_NAME, prefix=result_prefix))
     tmp_blobs = list(storage_client.list_blobs(BUCKET_NAME, prefix=f"{TMP_PREFIX.rstrip('/')}/"))
 
-    files_data = []  # <-- WAJIB ADA
+    # cari min/max updated untuk default filter
+    done_updates = [b.updated for b in result_blobs if b.name and (not b.name.endswith("/"))]
+    now_wib_date = datetime.now(WIB).date()
+
+    if done_updates:
+        max_dt = max(done_updates).astimezone(WIB)
+        default_end = max_dt.date()
+        default_start = (max_dt - timedelta(days=30)).date()
+        if default_start > default_end:
+            default_start = default_end
+    else:
+        default_start = now_wib_date
+        default_end = now_wib_date
+
+    fcol1, fcol2, fcol3 = st.columns([2, 2, 2])
+    with fcol1:
+        start_date = st.date_input("Dari (WIB)", value=default_start)
+    with fcol2:
+        end_date = st.date_input("Sampai (WIB)", value=default_end)
+    with fcol3:
+        show_running = st.checkbox("Tampilkan RUNNING", value=True)
+
+    if start_date > end_date:
+        st.warning("Tanggal 'Dari' lebih besar dari 'Sampai'. Saya tukar otomatis.")
+        start_date, end_date = end_date, start_date
+
+    # convert range WIB -> UTC (blob.updated umumnya UTC)
+    start_dt_wib = datetime.combine(start_date, datetime.min.time(), tzinfo=WIB)
+    end_dt_wib_excl = datetime.combine(end_date + timedelta(days=1), datetime.min.time(), tzinfo=WIB)
+    start_dt_utc = start_dt_wib.astimezone(timezone.utc)
+    end_dt_utc_excl = end_dt_wib_excl.astimezone(timezone.utc)
+
+    # =========================
+    # Build files_data
+    # =========================
+    files_data = []
 
     # DONE list dari output CSV
+    done_filenames = set()
     for blob in result_blobs:
         if blob.name.endswith("/"):
             continue
+        fname = os.path.basename(blob.name)
+        done_filenames.add(fname)
 
         files_data.append({
-            "invoice": os.path.basename(blob.name),
+            "invoice": fname,
             "status": "DONE",
-            "updated": blob.updated,
+            "updated": blob.updated,   # tz-aware datetime
             "path": blob.name
         })
 
@@ -129,29 +170,84 @@ if menu == "Report":
         if inv:
             running_invoices.add(inv)
 
-    for inv in running_invoices:
-        already_done = any(f["invoice"] == f"{inv}_{report_type}.csv" for f in files_data)
-        if not already_done:
-            files_data.append({
-                "invoice": f"{inv}_{report_type}.csv",
-                "status": "RUNNING",
-                "updated": None,
-                "path": None
-            })
+    if show_running:
+        for inv in running_invoices:
+            expected_name = f"{inv}_{report_type}.csv"
+            # penting: cek DONE berdasarkan semua output, bukan berdasarkan filter
+            if expected_name not in done_filenames:
+                files_data.append({
+                    "invoice": expected_name,
+                    "status": "RUNNING",
+                    "updated": None,
+                    "path": None
+                })
 
-    # setelah ini baru aman:
-    if not files_data:
-        st.warning("Belum ada file result.")
+    # =========================
+    # Apply time filter (DONE only)
+    # =========================
+    filtered = []
+    for f in files_data:
+        if f["status"] == "RUNNING":
+            filtered.append(f)
+            continue
+
+        # DONE: filter by updated time
+        dt = f.get("updated")
+        if dt and (start_dt_utc <= dt < end_dt_utc_excl):
+            filtered.append(f)
+
+    if not filtered:
+        st.warning("Belum ada file result untuk range waktu tersebut.")
     else:
-        # Sort by updated time (DONE first newest)
-        files_data = sorted(
-            files_data,
-            key=lambda x: (x["status"], x["updated"] or 0),
+        # DONE first (newest), RUNNING below
+        rank = {"DONE": 2, "RUNNING": 1}
+        filtered.sort(
+            key=lambda x: (rank.get(x["status"], 0), x["updated"] or datetime.min.replace(tzinfo=timezone.utc)),
             reverse=True
         )
 
-        for f in files_data:
+        # =========================
+        # Pagination (10 items)
+        # =========================
+        PAGE_SIZE = 10
+        total_items = len(filtered)
+        total_pages = (total_items + PAGE_SIZE - 1) // PAGE_SIZE
 
+        # reset page kalau filter berubah / report_type berubah
+        sig = (report_type, start_date, end_date, show_running)
+        if st.session_state.get("report_sig") != sig:
+            st.session_state["report_sig"] = sig
+            st.session_state["report_page"] = 1
+
+        page = st.session_state.get("report_page", 1)
+        page = max(1, min(page, total_pages))
+
+        ncol1, ncol2, ncol3, ncol4 = st.columns([1, 1, 2, 3])
+        with ncol1:
+            if st.button("Prev", disabled=(page <= 1)):
+                page -= 1
+        with ncol2:
+            if st.button("Next", disabled=(page >= total_pages)):
+                page += 1
+        with ncol3:
+            page = st.selectbox(
+                "Halaman",
+                options=list(range(1, total_pages + 1)),
+                index=page - 1
+            )
+        with ncol4:
+            st.write(f"Total: {total_items} item | {PAGE_SIZE}/halaman")
+
+        st.session_state["report_page"] = page
+
+        start_idx = (page - 1) * PAGE_SIZE
+        end_idx = start_idx + PAGE_SIZE
+        page_items = filtered[start_idx:end_idx]
+
+        # =========================
+        # Render table rows
+        # =========================
+        for f in page_items:
             col1, col2, col3, col4 = st.columns([3, 2, 3, 2])
 
             with col1:
@@ -165,7 +261,7 @@ if menu == "Report":
 
             with col3:
                 if f["updated"]:
-                    wib_time = f["updated"].astimezone(timezone(timedelta(hours=7)))
+                    wib_time = f["updated"].astimezone(WIB)
                     st.write(wib_time.strftime("%Y-%m-%d %H:%M:%S"))
                 else:
                     st.write("-")
@@ -174,11 +270,9 @@ if menu == "Report":
                 if f["status"] == "DONE":
                     blob = bucket.blob(f["path"])
                     file_bytes = blob.download_as_bytes()
-
                     st.download_button(
                         label="Download",
                         data=file_bytes,
                         file_name=f["invoice"],
                         mime="application/octet-stream"
                     )
-
