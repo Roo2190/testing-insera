@@ -405,7 +405,7 @@ GENERAL KNOWLEDGE DETAIL:
 
 7. pl_item_no
    - Setiap item memiliki item_no. Jadi coba telusuri item_no dari setiap item.
-   - terletak di atas deskripsi atau ada di bagian customer_po_no.
+   - terletak di atas deskripsi, ada di bagian customer_po_no, atau mungkin memiliki segmen nya sendiri.
 
 8. pl_messrs pada Packing List (PL):
    - SELALU PT Insera Sena.
