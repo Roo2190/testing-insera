@@ -403,6 +403,10 @@ GENERAL KNOWLEDGE DETAIL:
    - Jika tidak eksplisit → cek kolom ke-2 tabel item.
    - Jika tetap tidak ada → "null".
 
+6. pl_item_no
+   - Setiap item memiliki item_no. Jadi coba telusuri item_no dari setiap item.
+   - terletak di atas deskripsi atau ada di bagian customer_po_no.
+
 6. pl_messrs pada Packing List (PL):
    - SELALU PT Insera Sena.
    - Jika terdapat beberapa nama → pilih PT Insera Sena.
