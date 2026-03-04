@@ -63,7 +63,7 @@ with col1:
 with col2:
     st.markdown('<div class="main-title">OCR Gemini</div>', unsafe_allow_html=True)
 
-menu = st.sidebar.radio("Menu", ["Upload", "Report", "Sync PO"])
+menu = st.sidebar.radio("Menu", ["Upload", "Report"])
 
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
@@ -339,40 +339,3 @@ if menu == "Report":
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.caption(f"Halaman {st.session_state['report_page']} / {total_pages} | Total {total_items} item | {PAGE_SIZE}/halaman")
-
-if menu == "Sync PO":
-    st.subheader("Sync Purchase Order (SAP → GCS)")
-
-    st.info(
-        f"Fungsi ini akan:\n"
-        f"1) Menghapus semua file di gs://{BUCKET_NAME}/{PO_PREFIX}/\n"
-        f"2) Mengambil PO terbaru dari SAP\n"
-        f"3) Upload 1 file JSON ke gs://{BUCKET_NAME}/{PO_PREFIX}/po_master.json"
-    )
-
-    # tampilkan kondisi folder po/
-    po_blobs = [b for b in storage_client.list_blobs(BUCKET_NAME, prefix=f"{PO_PREFIX.rstrip('/')}/")
-                if not b.name.endswith("/")]
-
-    if po_blobs:
-        latest = max(po_blobs, key=lambda b: b.updated or datetime.min.replace(tzinfo=timezone.utc))
-        st.write(f"File PO saat ini: **{os.path.basename(latest.name)}**")
-        st.write(f"Last updated (UTC): {latest.updated}")
-        st.caption(f"Total file di {PO_PREFIX}/: {len(po_blobs)}")
-    else:
-        st.warning("Folder po/ masih kosong.")
-
-    st.divider()
-
-    # (opsional) tampilkan config sumber SAP dari env
-    sap_url = os.getenv("SAP_ODATA_URL", "")
-    st.caption("Config (env): SAP_ODATA_URL harus diset di environment / secrets.")
-
-    if st.button("Pull PO dari SAP", type="primary"):
-        with st.spinner("Menarik data PO dari SAP dan upload ke GCS..."):
-            # uri, n = sync_po_from_sap_to_gcs(
-            #     bucket_name=BUCKET_NAME,
-            #     po_prefix=PO_PREFIX
-            # )
-            pass
-        st.success(f"Berhasil upload {n} baris PO ke: {uri}")

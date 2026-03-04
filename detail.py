@@ -385,7 +385,7 @@ GENERAL KNOWLEDGE DETAIL:
 
 1. Output DETAIL merepresentasikan DATA PER LINE ITEM.
 
-2. invoice_customer_po_no pada Invoice:
+2. customer_po_no pada Invoice dan juga PL:
    - Jika invoice_customer_po_no bernilai "null", gunakan invoice_customer_po_no terakhir yang valid dari line item sebelumnya.
    - customer_po_no format numerik, berisi 8-10 digit (TANPA ALPHABET), Dan biasanya diawali dengan angka 4
       Contoh
@@ -394,6 +394,7 @@ GENERAL KNOWLEDGE DETAIL:
       - 45295210
       - 45295893
       - 45297175
+
 
 3. inv_vendor_name pada Invoice:
    - BUKAN berasal dari PT Insera Sena.
