@@ -432,6 +432,7 @@ GENERAL KNOWLEDGE DETAIL:
       - 45295210
       - 45295893
       - 45297175
+
 3. inv_seq:
    - inv_seq wajib numeric murni dan tidak boleh "null".
    - inv_seq dihitung GLOBAL berdasarkan inv_customer_po_no yang sama untuk seluruh line item (index 1 sampai total_row), bukan dihitung ulang per batch.
@@ -446,12 +447,18 @@ GENERAL KNOWLEDGE DETAIL:
 5. inv_price_unit SAMA dengan inv_amount_unit:
    - Kedua field ini mempresentasikan mata uang (currency).  
    - Telusuri currency yang digunakan, contoh valuenya: USD, CNY, YEN, EUR dan lain-lain.
+   - Jika "null" gunakan currency dari dokumen tersebut, biasanya dapat ditemukan pada bagian Currency atau Currency Code.  
+     Contoh:
+     Currency Code : USD → maka inv_price_unit dan inv_amount_unit diisi dengan USD. 
 
 6. pl_item_no
    - Setiap item memiliki item_no. Jadi coba telusuri item_no dari setiap item.
    - terletak di atas deskripsi, ada di bagian customer_po_no, atau mungkin memiliki segmen nya sendiri.
 
-7. Field po_* WAJIB diisi dengan STRING "null".
+7. pl_package_count:
+   - Field ini merepresentasikan jumlah package untuk setiap line item.
+   - Telusuri dan ambil jumlah package yang tercantum pada dokumen Packing List untuk line item tersebut.
+   - Isi dengan jumlah package (angka) yang terkait dengan line item tersebut.
 
 8. pl_package_unit:
    - PAHAMI TERLEBIH DAHULU JENIS PACKAGE UNIT YANG DIGUNAKAN PADA DOKUMEN.
@@ -477,14 +484,16 @@ GENERAL KNOWLEDGE DETAIL:
 
      Maka package unit adalah PK.
 
-8. coo_seq:
+9. Field po_* WAJIB diisi dengan STRING "null".
+
+10. coo_seq:
    - coo_seq adalah nomor urut line item PADA DOKUMEN CERTIFICATE OF ORIGIN (COO) SAJA.
    - Jika terdapat nomor urut eksplisit pada dokumen COO, WAJIB gunakan nomor tersebut.
    - JANGAN menghitung ulang berdasarkan jumlah item pada Invoice atau dokumen lain.
    - Jika tidak terdapat nomor urut eksplisit pada dokumen COO, hitung berdasarkan urutan kemunculan line item DI DALAM DOKUMEN COO SAJA (dimulai dari 1).
    - Jumlah coo_seq harus sama dengan jumlah line item pada dokumen COO.
 
-9. bl_description dan bl_hs_code:
+11. bl_description dan bl_hs_code:
    - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
    - value bl_hs_code diisi sesuai dengan bl_descriptionnya
    - Contoh:
