@@ -443,22 +443,39 @@ GENERAL KNOWLEDGE DETAIL:
    - Jika tidak eksplisit → cek kolom ke-2 tabel item.
    - Jika tetap tidak ada → "null".
 
-5. pl_item_no
+5. inv_price_unit SAMA dengan inv_amount_unit:
+   - Kedua field ini mempresentasikan mata uang (currency).  
+   - Telusuri currency yang digunakan, contoh valuenya: USD, CNY, YEN, EUR dan lain-lain.
+
+6. pl_item_no
    - Setiap item memiliki item_no. Jadi coba telusuri item_no dari setiap item.
    - terletak di atas deskripsi, ada di bagian customer_po_no, atau mungkin memiliki segmen nya sendiri.
 
-6. Field po_* WAJIB diisi dengan STRING "null".
+7. Field po_* WAJIB diisi dengan STRING "null".
 
-7. Package unit pada Packing List (PL) dan Invoice (INV):
-   - PAHAMI TERLEBIH DAHULU PACKAGE UNIT APA YANG DIGUNAKAN PADA DOKUMEN
-   - Jika semua barang karton (CTN) → CT
-   - Jika semua barang pallet (PLT) → PX
-   - Jika barang campuran → PK, Contoh: ada dua unit, PLTS dan Carton, maka menjadi PK
-   - Jika barang Bal → BL
-   - Selain itu → gunakan nilai asli.
-   - Jika ada packing unit yang diisi oleh packing unit lainnnya contoh:
-     Package Detail: 1 PLT(S)  Number of Carton: 9
-     Berarti ambil yang secara garis besarnya yaitu PLT Yang artinya package unit adalah PX.
+8. pl_package_unit:
+   - PAHAMI TERLEBIH DAHULU JENIS PACKAGE UNIT YANG DIGUNAKAN PADA DOKUMEN.
+   - Tentukan package unit berdasarkan struktur kemasan yang ada.
+
+   - Jika semua barang menggunakan karton (CTN / CARTON) → CT
+   - Jika semua barang menggunakan pallet (PLT / PALLET) → PX
+   - Jika terdapat lebih dari satu jenis package unit yang berdiri sendiri (misal: 5 PLT dan 11 CTN) → PK
+   - Jika barang dalam Bal (BALE) → BL
+   - Selain itu → gunakan nilai asli dari dokumen.
+
+   - Jika terdapat struktur kemasan bertingkat (nested packaging), gunakan unit kemasan utamanya.
+     Contoh:
+     Package Detail: 1 PLT(S)
+     Number of Carton: 9
+
+     Karton berada di dalam pallet, sehingga package unit utama adalah PLT → PX.
+
+   - Jika unit muncul sebagai kemasan terpisah, maka dianggap campuran.
+     Contoh:
+     5 PLT
+     11 CTN
+
+     Maka package unit adalah PK.
 
 8. coo_seq:
    - coo_seq adalah nomor urut line item PADA DOKUMEN CERTIFICATE OF ORIGIN (COO) SAJA.
