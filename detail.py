@@ -348,6 +348,41 @@ OUTPUT SCHEMA (HEADER ONLY):
   "coo_voyage_no": "string",
   "coo_port_of_discharge": "string"
 }
+
+GENERAL KNOWLEDGE:
+
+1. inv_vendor_name pada Invoice:
+   - BUKAN berasal dari PT Insera Sena.
+   - Jika terdapat PT Insera Sena dan pihak lain → pilih yang BUKAN PT Insera Sena.
+
+2. Messrs pada Packing List (PL) dan Invoice (INV):
+   - SELALU PT Insera Sena.
+   - Jika terdapat beberapa nama → pilih PT Insera Sena.
+   - Jika ada variasi nama perusahaan PT Insera Sena seperti:
+     "PT. INSERA SENA", "PERSEROAN TERBATAS INSERA SENA", "PT INSERASENA", atau bentuk lainnya yang merujuk pada PT Insera Sena,
+     NORMALISASI menjadi: "PT Insera Sena"
+   
+3. Messrs address pada Packing List (PL) dan Invoice (INV):
+   - Hanya ekstrak address dari perusahaannya tanpa kode posnya, contoh:
+      JL VETERAN, LINGKAR TIMUR, KEL. WADUNGASIH, KEC. BUDURAN, KAB. SIDOARJO, PROV. JAWA TIMUR 61252
+      Berarti yang diekstrak hanya: JL VETERAN, LINGKAR TIMUR, KEL. WADUNGASIH, KEC. BUDURAN, KAB. SIDOARJO, PROV. JAWA TIMUR
+
+4. pl_total_package:
+   - Untuk total package yang digunakan, liat secara detail berapa package secara total. Jika secara eksplisit dikatakan totalnya, langsung ambil valuenya.
+   - Jika tidak secara eksplisit, contoh:
+     Total Number of Packages: 1,   Package Detail: 1 PLT(S)  Number of Carton: 9
+     Maka pl_total_package adalah 9 karena secara detail, ada 9 total package.
+
+5. LC Logic pada Bill of Lading (BL):
+   - Jika bl_consignee_name mengandung nama perusahaan Bank → BL bertipe LC.
+   - Jika tidak → BL bukan bertipe LC.
+
+6. Jika pada dokumen Bill of Lading (BL) bertipe LC:
+    - bl_consignee_name diambil dari notify party
+    - bl_consignee_address diambil dari notify party
+
+7. inv_coo_commodity_origin
+   - SEBUTKAN NAMA NEGARANYA SAJA TIDAK PERLU TULISAN "Made In" yang penting nama negaranya dan tulisan dalam huruf besar semua.
 """
 
 def build_detail_prompt_from_index(total_row: int, index_slice: list, first_index: int, last_index: int) -> str:
@@ -397,42 +432,24 @@ GENERAL KNOWLEDGE DETAIL:
       - 45295210
       - 45295893
       - 45297175
-
-
-3. inv_vendor_name pada Invoice:
-   - BUKAN berasal dari PT Insera Sena.
-   - Jika terdapat PT Insera Sena dan pihak lain → pilih yang BUKAN PT Insera Sena.
-
-4. inv_seq:
+3. inv_seq:
    - inv_seq wajib numeric murni dan tidak boleh "null".
    - inv_seq dihitung GLOBAL berdasarkan inv_customer_po_no yang sama untuk seluruh line item (index 1 sampai total_row), bukan dihitung ulang per batch.
    - Definisi inv_seq per baris: inv_seq = hitung berapa kali inv_customer_po_no yang sama sudah muncul dari index 1 sampai index baris ini (termasuk baris ini).
    Contoh: PO=112 muncul di index 2,5,6 → inv_seq untuk index 2=1, index 5=2, index 6=3.
    - Untuk baris yang kamu keluarkan (index {first_index}..{last_index}), inv_seq tetap harus mengikuti hitungan global dari index 1..total_row.
 
-6. inv_spart_item_no:
+4. inv_spart_item_no:
    - Jika tidak eksplisit → cek kolom ke-2 tabel item.
    - Jika tetap tidak ada → "null".
 
-7. pl_item_no
+5. pl_item_no
    - Setiap item memiliki item_no. Jadi coba telusuri item_no dari setiap item.
    - terletak di atas deskripsi, ada di bagian customer_po_no, atau mungkin memiliki segmen nya sendiri.
 
-8. Messrs pada Packing List (PL) dan invoice:
-   - SELALU PT Insera Sena.
-   - Jika terdapat beberapa nama → pilih PT Insera Sena.
-   - Jika ada variasi nama perusahaan PT Insera Sena seperti:
-     "PT. INSERA SENA", "PERSEROAN TERBATAS INSERA SENA", "PT INSERASENA", atau bentuk lainnya yang merujuk pada PT Insera Sena,
-     NORMALISASI menjadi: "PT Insera Sena"
-   
-9. Messrs address pada Packing List (PL) dan invoice:
-   - Hanya ekstrak address dari perusahaannya tanpa kode posnya, contoh:
-      JL VETERAN, LINGKAR TIMUR, KEL. WADUNGASIH, KEC. BUDURAN, KAB. SIDOARJO, PROV. JAWA TIMUR 61252
-      Berarti yang diekstrak hanya: JL VETERAN, LINGKAR TIMUR, KEL. WADUNGASIH, KEC. BUDURAN, KAB. SIDOARJO, PROV. JAWA TIMUR
+6. Field po_* WAJIB diisi dengan STRING "null".
 
-10. Field po_* WAJIB diisi dengan STRING "null".
-
-11. Package unit pada Packing List (PL) dan Invoice (INV):
+7. Package unit pada Packing List (PL) dan Invoice (INV):
    - PAHAMI TERLEBIH DAHULU PACKAGE UNIT APA YANG DIGUNAKAN PADA DOKUMEN
    - Jika semua barang karton (CTN) → CT
    - Jika semua barang pallet (PLT) → PX
@@ -443,26 +460,14 @@ GENERAL KNOWLEDGE DETAIL:
      Package Detail: 1 PLT(S)  Number of Carton: 9
      Berarti ambil yang secara garis besarnya yaitu PLT Yang artinya package unit adalah PX.
 
-
-12. LC Logic pada Bill of Lading (BL):
-   - Jika bl_consignee_name mengandung nama perusahaan Bank → BL bertipe LC.
-   - Jika tidak → BL bukan bertipe LC.
-
-13. Jika pada dokumen Bill of Lading (BL) bertipe LC:
-    - bl_consignee_name diambil dari notify party
-    - bl_consignee_address diambil dari notify party
-
-14. inv_coo_commodity_origin
-   - SEBUTKAN NAMA NEGARANYA SAJA TIDAK PERLU TULISAN "Made In" yang penting nama negaranya dan tulisan dalam huruf besar semua.
-
-15. coo_seq:
+8. coo_seq:
    - coo_seq adalah nomor urut line item PADA DOKUMEN CERTIFICATE OF ORIGIN (COO) SAJA.
    - Jika terdapat nomor urut eksplisit pada dokumen COO, WAJIB gunakan nomor tersebut.
    - JANGAN menghitung ulang berdasarkan jumlah item pada Invoice atau dokumen lain.
    - Jika tidak terdapat nomor urut eksplisit pada dokumen COO, hitung berdasarkan urutan kemunculan line item DI DALAM DOKUMEN COO SAJA (dimulai dari 1).
    - Jumlah coo_seq harus sama dengan jumlah line item pada dokumen COO.
 
-16. Bl_description dan bl_hs_code:
+9. bl_description dan bl_hs_code:
    - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
    - value bl_hs_code diisi sesuai dengan bl_descriptionnya
    - Contoh:
@@ -474,13 +479,6 @@ GENERAL KNOWLEDGE DETAIL:
 
      pada inv_description ada value FRAME PART AF-9F-0270 (which is tidak ada), maka bl_description isi null saja
      pada inv_description ada value FRAME PART A-HG009 (which is ada), maka bl_description isi FRAME PART A-HG009
-
-17. pl_total_package:
-   - Untuk total package yang digunakan, liat secara detail berapa package secara total. Jika secara eksplisit dikatakan totalnya, langsung ambil valuenya.
-   - Jika tidak secara eksplisit, contoh:
-     Total Number of Packages: 1,   Package Detail: 1 PLT(S)  Number of Carton: 9
-     Maka pl_total_package adalah 9 karena secara detail, ada 9 total package.
-   
 
 OUTPUT RESTRICTION:
 - Output HARUS dimulai '[' dan diakhiri ']'
