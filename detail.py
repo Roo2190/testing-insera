@@ -430,6 +430,10 @@ GENERAL KNOWLEDGE DETAIL:
    - Jika barang campuran → PK, Contoh: ada dua unit, PLTS dan Carton, maka menjadi PK
    - Jika barang Bal → BL
    - Selain itu → gunakan nilai asli.
+   - Jika ada packing unit yang diisi oleh packing unit lainnnya contoh:
+   Package Detail: 1 PLT(S)  Number of Carton: 9
+   Berarti ambil yang secara garis besarnya yaitu PLT Yang artinya package unit adalah PX
+
 
 11. LC Logic pada Bill of Lading (BL):
    - Jika bl_consignee_name mengandung nama perusahaan Bank → BL bertipe LC.
@@ -461,6 +465,13 @@ GENERAL KNOWLEDGE DETAIL:
 
      pada inv_description ada value FRAME PART AF-9F-0270 (which is tidak ada), maka bl_description isi null saja
      pada inv_description ada value FRAME PART A-HG009 (which is ada), maka bl_description isi FRAME PART A-HG009
+
+16. pl_total_package:
+   - Untuk total package yang digunakan tolong liat secara detail berapa package secara total. Jika secara eksplisit dikatakan totalnya, langsung ambil valuenya.
+   - Jika tidak secara eksplisit, contoh:
+   Total Number of Packages: 1,   Package Detail: 1 PLT(S)  Number of Carton: 9
+   Berarti total packagenya adalah 9 karena secara detail, ada 9 total package.
+   
 
 OUTPUT RESTRICTION:
 - Output HARUS dimulai '[' dan diakhiri ']'
