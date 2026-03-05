@@ -376,7 +376,7 @@ ATURAN:
 - Tidak boleh JSON literal null → gunakan "null".
 - Untuk FIELD BERTIPE NUMBER jika tidak ada → isi 0.
 - Output HANYA JSON ARRAY, tanpa teks tambahan.
-- Jika dokumen tidak tersedia → field prefix dokumen tsb WAJIB "null" / 0 sesuai tipe.
+- Jika dokumen tidak tersedia → field dengan prefix dokuumen tersebut (contoh: inv_*, pl_*, bl_*, coo_*) WAJIB diisi dengan "null" / 0 sesuai tipe.
 - Field po_* WAJIB "null"/0 (akan diisi Python dari master PO).
 
 OUTPUT SCHEMA (CONTENT ONLY, TANPA HEADER):
@@ -587,7 +587,7 @@ DETAIL OUTPUT SCHEMA
   "pl_invoice_date": "string",
   "pl_messrs": "string",
   "pl_messrs_address": "string",
-  "pl_item_no": "number",
+  "pl_item_no": "string",
   "pl_description": "string",
   "pl_quantity": "number",
   "pl_package_unit": "string",
