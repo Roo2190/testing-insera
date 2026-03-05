@@ -503,6 +503,17 @@ def _fill_forward(rows: list, key: str):
             if last is not None:
                 r[key] = last
 
+def _fill_inv_price_unit_from_amount_unit(rows: list):
+    """
+    Jika inv_price_unit = null/kosong, isi dengan inv_amount_unit (kalau ada).
+    """
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+
+        if _is_null(r.get("inv_price_unit")) and not _is_null(r.get("inv_amount_unit")):
+            r["inv_price_unit"] = r.get("inv_amount_unit")
+
 def _recompute_seq_by_key(rows: list, group_key: str, seq_key: str):
     """Hitung ulang seq global berdasarkan group_key (misal inv_customer_po_no)."""
     counter = {}
@@ -1259,6 +1270,9 @@ def run_ocr(invoice_name, uploaded_pdf_paths, with_total_container):
 
         # 1) apply rule invoice po forward-fill sebelum ambil po_numbers
         _fill_forward(all_rows, "inv_customer_po_no")
+
+        #  FIX: kalau inv_price_unit null, samakan dengan inv_amount_unit
+        _fill_inv_price_unit_from_amount_unit(all_rows)
 
         # 2) ambil po_numbers setelah carry-forward
         po_numbers = {
