@@ -459,6 +459,7 @@ GENERAL KNOWLEDGE DETAIL:
    - Field ini merepresentasikan jumlah package untuk setiap line item.
    - Hitung jumlah package berdasarkan jumlah Box# yang terkait dengan line item tersebut pada dokumen Packing List.
    - Jika satu item muncul pada beberapa Box#, maka jumlahkan semua Box# tersebut sebagai package count.
+   - Jangan menggunakan nilai dari bagian summary seperti "Total # of Packages". 
    - Isi dengan jumlah package (angka).
    - Contoh:
      Jika item muncul pada:
