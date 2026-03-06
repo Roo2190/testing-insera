@@ -538,19 +538,19 @@ GENERAL KNOWLEDGE DETAIL:
 
 13. coo_gw_unit:
     - Field ini merepresentasikan satuan dari gross weight pada dokumen Certificate of Origin (COO).
-    - Pada dokumen COO, nilai weight ditulis dalam format seperti: "80KG G.W.", "160KG G.W.", atau "240KG G.W.".
+    - Pada dokumen COO, nilai weight dapat ditulis dalam format seperti: "80KG G.W.", "160KG G.W.", atau "240KG G.W.".
     - Dalam format tersebut:
-       KG = satuan berat (unit)
-       G.W. = label yang berarti Gross Weight.
+      KG = satuan berat (unit)
+      G.W. = label yang berarti Gross Weight.
 
     - Ambil satuan berat yang terletak setelah angka weight, yaitu KG.
     - Jangan mengambil "G.W." sebagai unit karena itu hanya penanda Gross Weight.
-       Contoh:
-       80KG G.W. → coo_gw_unit = KG
-       160KG G.W. → coo_gw_unit = KG
-       240KG G.W. → coo_gw_unit = KG 
-       
-13. bl_description dan bl_hs_code:
+      Contoh:
+      80KG G.W. → coo_gw_unit = KG
+      160KG G.W. → coo_gw_unit = KG
+      240KG G.W. → coo_gw_unit = KG 
+
+14. bl_description dan bl_hs_code:
    - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
    - value bl_hs_code diisi sesuai dengan bl_descriptionnya
    - Contoh:
