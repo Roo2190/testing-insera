@@ -492,7 +492,26 @@ GENERAL KNOWLEDGE DETAIL:
 
      Maka package unit adalah PK.
 
-9. pl_volume_unit:
+9. pl_volume:
+   - Field ini merepresentasikan total volume untuk setiap line item.
+   - Ambil nilai volume yang tercantum pada dokumen Packing List.
+
+   - Jika nilai volume pada dokumen merupakan volume per package, maka kalikan nilai tersebut dengan jumlah package pada line item (pl_package_count) untuk mendapatkan total volume line item.
+   - Gunakan hasil perhitungan tersebut sebagai nilai pl_volume.
+     Contoh:
+     Jika pada dokumen tertulis:
+     PACKAGES = 20
+     VOL/PKGS = 0.05
+     Maka:
+     pl_volume = 0.05 × 20 = 1.0
+   
+      Contoh lain:
+      PACKAGES = 155
+      VOL/PKGS = 0.11
+      Maka:
+      pl_volume = 0.11 × 155 = 17.05
+
+10. pl_volume_unit:
    - Ambil volume unit yang tercantum pada dokumen Packing List (PL).
    - Jika pada dokumen Packing List pl_volume_unit tidak tercantum, maka periksa dokumen lain seperti Bill of Lading (BL).
 
@@ -508,16 +527,16 @@ GENERAL KNOWLEDGE DETAIL:
      Maka:
      pl_volume_unit = CUF
 
-10. Field po_* WAJIB diisi dengan STRING "null".
+11. Field po_* WAJIB diisi dengan STRING "null".
 
-11. coo_seq:
+12. coo_seq:
    - coo_seq adalah nomor urut line item PADA DOKUMEN CERTIFICATE OF ORIGIN (COO) SAJA.
    - Jika terdapat nomor urut eksplisit pada dokumen COO, WAJIB gunakan nomor tersebut.
    - JANGAN menghitung ulang berdasarkan jumlah item pada Invoice atau dokumen lain.
    - Jika tidak terdapat nomor urut eksplisit pada dokumen COO, hitung berdasarkan urutan kemunculan line item DI DALAM DOKUMEN COO SAJA (dimulai dari 1).
    - Jumlah coo_seq harus sama dengan jumlah line item pada dokumen COO.
 
-12. bl_description dan bl_hs_code:
+13. bl_description dan bl_hs_code:
    - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
    - value bl_hs_code diisi sesuai dengan bl_descriptionnya
    - Contoh:
