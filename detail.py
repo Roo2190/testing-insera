@@ -514,6 +514,13 @@ GENERAL KNOWLEDGE DETAIL:
      pada inv_description ada value FRAME PART AF-9F-0270 (which is tidak ada), maka bl_description isi null saja
      pada inv_description ada value FRAME PART A-HG009 (which is ada), maka bl_description isi FRAME PART A-HG009
 
+
+12. pl_volume_unit:
+   - jika pada dokumen, volume unit tidak di sertakan, maka cek pada dokumen lain apakah ada volume unit. Dan jika ada, check value terlebih dahulun dan di compare. Dan jika hasil sama, maka ambil langsung volume unit tersebut. Namun jika beda maka perlu dipahami dan diconvert ke dalam volume unit yang di convertkan
+   - Contoh:
+   pl_volume_unit tidak ada volume unit namun di bill of Lading volume unit itu m3 dan value volume pada kedua dokumen sama, maka pl_volume_unit = m3
+   pl_volume_unit tidak ada volume unit namun di bill of Lading volume unit itu m3 dan value volume pada kedua dokumen berbeda, maka dipahami dulu dari value volume dari BL itu berapa dan PL berapa dan satuan apa yang digunakan untuk diconvert menjadi yang ada di PL
+
 OUTPUT RESTRICTION:
 - Output HARUS dimulai '[' dan diakhiri ']'
 - Tidak boleh markdown/plan/teks lain.
