@@ -447,16 +447,7 @@ GENERAL KNOWLEDGE DETAIL:
 5. inv_price_unit SAMA dengan inv_amount_unit:
    - Kedua field ini mempresentasikan mata uang (currency).  
    - Telusuri currency yang digunakan, contoh valuenya: USD, CNY, YEN, EUR dan lain-lain.
-
    - Output harus menggunakan kode mata uang standar ISO 4217 (3 huruf).
-   - Jangan menggunakan simbol mata uang seperti $, US$, ¥, €, Rp, dll.
-     Contoh konversi:
-     US$ atau $ → USD
-     RMB atau ¥ → CNY
-     ¥ → JPY (jika konteks Jepang)
-     Rp → IDR
-     € → EUR
-     
    - Jika "null" gunakan currency dari dokumen tersebut, biasanya dapat ditemukan pada bagian Currency atau Currency Code.  
      Contoh:
      Currency Code : USD → maka inv_price_unit dan inv_amount_unit diisi dengan USD. 
@@ -561,9 +552,11 @@ GENERAL KNOWLEDGE DETAIL:
       240KG G.W. → coo_gw_unit = KG 
 
 14. bl_description dan bl_hs_code:
+   - HANYA mengutamakan BL Description pada dokumen BL terlebih dahulu sebelum melakukan mappingan.
    - bl_description dimapping dengan inv_description. Jika inv_description tidak exist pada dokumen BL, maka bl_description fill null aja
    - value bl_hs_code diisi sesuai dengan bl_descriptionnya
    - Contoh:
+     Pada Dokumen BL, terdapat item description sebagai berikut:
      FRAME PART A-F3306-1 HS NUMBER: 8714.91
      FRAME PART A-HG009 HS NUMBER: 8714.91
      FRAME PART A-HG011 HS NUMBER: 8714.91
