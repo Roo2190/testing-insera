@@ -579,6 +579,17 @@ GENERAL KNOWLEDGE DETAIL:
      pada inv_description ada value FRAME PART A-HG009 (which is ada), maka bl_description isi FRAME PART A-HG009
      - Hanya boleh mengambil dari dokumen Bill Of Lading (BL), TIDAK BOLEH dari dokumen yang lain
 
+15. coo_customer_po_no:
+   - Field ini merepresentasikan Customer PO Number yang tercantum pada dokumen vendor Shimano.
+   - Dokumen vendor Shimano dapat berupa Invoice, Packing List, COO, atau dokumen lain yang diterbitkan oleh perusahaan Shimano.
+   - Vendor Shimano dapat dikenali dari nama perusahaan pada dokumen, seperti:
+     - SHIMANO (SINGAPORE) PTE LTD
+     - SHIMANO INC.
+   - Jika dokumen berasal dari vendor Shimano → telusuri dan ekstrak Customer PO Number dari dokumen.
+   - Customer PO Number biasanya berupa angka (numeric) yang merujuk pada pesanan customer.
+   - Ambil nilai Customer PO Number persis seperti yang tertulis pada dokumen tanpa mengubah formatnya.
+   - Jika dokumen BUKAN berasal dari vendor Shimano → isi coo_customer_po_no dengan "null".
+
 OUTPUT RESTRICTION:
 - Output HARUS dimulai '[' dan diakhiri ']'
 - Tidak boleh markdown/plan/teks lain.
