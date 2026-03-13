@@ -1328,6 +1328,36 @@ def _convert_to_csv(invoice_name, rows):
     return f"gs://{BUCKET_NAME}/{blob_path}"
 
 
+def _normalize_inv_spart_item_no(value):
+    """
+    Gabungkan whitespace di item code OCR.
+    Contoh:
+    - 'BAXVLPLG38802 OR' -> 'BAXVLPLG38802OR'
+    - ' BAXV LP LG38802   OR ' -> 'BAXVLPLG38802OR'
+    """
+    if value is None:
+        return "null"
+
+    s = str(value).strip()
+
+    if s == "" or s.lower() == "null":
+        return "null"
+
+    # hapus semua whitespace: spasi, tab, newline, non-breaking space, dll
+    s = re.sub(r"[\s\u00A0]+", "", s)
+
+    return s
+
+
+def _postprocess_inv_spart_item_no(rows: list):
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        row["inv_spart_item_no"] = _normalize_inv_spart_item_no(
+            row.get("inv_spart_item_no")
+        )
+
+
 # ==============================
 # MAIN RUN OCR
 # ==============================
@@ -1440,6 +1470,8 @@ def run_ocr(invoice_name, uploaded_pdf_paths, with_total_container):
         _ensure_all_detail_keys(all_rows)
 
         _apply_header_to_rows(all_rows, header_obj)
+
+        _postprocess_inv_spart_item_no(all_rows)
 
         # 0) reset match fields (Gemini tidak validasi)
         _reset_match_fields(all_rows)
