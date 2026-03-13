@@ -1,13 +1,12 @@
 import streamlit as st
 import tempfile
-from function import run_ocr, create_run_marker
+from function import run_ocr
 from google.cloud import storage
 from config import BUCKET_NAME, TMP_PREFIX, PO_PREFIX
 import os
 import re
 from datetime import datetime, timezone, timedelta
 import json
-from threading import Thread
 
 st.set_page_config(layout="wide")
 
@@ -69,39 +68,6 @@ menu = st.sidebar.radio("Menu", ["Upload", "Report"])
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
 
-def _run_ocr_background(invoice_name, pdf_paths, with_total_container, run_prefix):
-    try:
-        run_ocr(
-            invoice_name=invoice_name,
-            uploaded_pdf_paths=pdf_paths,
-            with_total_container=with_total_container,
-            run_prefix=run_prefix
-        )
-    except Exception as e:
-        print(f"[OCR BACKGROUND ERROR] {e}")
-    finally:
-        for p in pdf_paths:
-            try:
-                if os.path.exists(p):
-                    os.remove(p)
-            except Exception:
-                pass
-
-def _normalize_invoice_key(value, report_type):
-    if value is None:
-        return ""
-
-    s = str(value).strip()
-    s = re.sub(r"\.pdf$", "", s, flags=re.IGNORECASE)
-    s = re.sub(
-        rf"_{re.escape(report_type)}\.csv$",
-        "",
-        s,
-        flags=re.IGNORECASE
-    )
-
-    return s.strip().lower()
-
 if menu == "Upload":
 
     st.subheader("Upload Documents")
@@ -141,36 +107,17 @@ if menu == "Upload":
                 tmp.close()
                 pdf_paths.append(tmp.name)
 
-            job_invoice_name = output_name or invoice.name.replace('.pdf', '')
-
-            # buat marker RUNNING lebih dulu di GCS
-            run_prefix = create_run_marker(
-                invoice_name=job_invoice_name,
+            run_ocr(
+                invoice_name=output_name or invoice.name.replace('.pdf',''),
+                uploaded_pdf_paths=pdf_paths,
                 with_total_container=with_total_container
             )
 
-            t = Thread(
-                target=_run_ocr_background,
-                kwargs={
-                    "invoice_name": job_invoice_name,
-                    "pdf_paths": pdf_paths,
-                    "with_total_container": with_total_container,
-                    "run_prefix": run_prefix,
-                },
-                daemon=False,
-            )
-            t.start()
-
-            st.success("OCR mulai diproses. Silakan buka halaman Report lalu klik Refresh untuk melihat status RUNNING.")
+            st.success("OCR selesai diproses")
 
 if menu == "Report":
 
     st.subheader("Download OCR Result")
-
-    r1, r2 = st.columns([1, 5])
-    with r1:
-        if st.button("Refresh"):
-            st.rerun()
 
     report_type = st.selectbox(
         "Pilih Report",
@@ -226,20 +173,16 @@ if menu == "Report":
 
     # DONE list dari output CSV
     done_filenames = set()
-    done_invoice_keys = set()
-
     for blob in result_blobs:
         if blob.name.endswith("/"):
             continue
-
         fname = os.path.basename(blob.name)
         done_filenames.add(fname)
-        done_invoice_keys.add(_normalize_invoice_key(fname, report_type))
 
         files_data.append({
             "invoice": fname,
             "status": "DONE",
-            "updated": blob.updated,
+            "updated": blob.updated,   # tz-aware datetime
             "path": blob.name
         })
 
@@ -260,26 +203,16 @@ if menu == "Report":
             running_invoices.add(inv)
 
     if show_running:
-        added_running_keys = set()
-
         for inv in running_invoices:
-            inv_key = _normalize_invoice_key(inv, report_type)
-            expected_name = f"{str(inv).strip()}_{report_type}.csv"
-
-            if inv_key in done_invoice_keys:
-                continue
-
-            if inv_key in added_running_keys:
-                continue
-
-            added_running_keys.add(inv_key)
-
-            files_data.append({
-                "invoice": expected_name,
-                "status": "RUNNING",
-                "updated": None,
-                "path": None
-            })
+            expected_name = f"{inv}_{report_type}.csv"
+            # penting: cek DONE berdasarkan semua output, bukan berdasarkan filter
+            if expected_name not in done_filenames:
+                files_data.append({
+                    "invoice": expected_name,
+                    "status": "RUNNING",
+                    "updated": None,
+                    "path": None
+                })
 
     # =========================
     # Apply time filter (DONE only)
@@ -299,7 +232,7 @@ if menu == "Report":
         st.warning("Belum ada file result untuk range waktu tersebut.")
     else:
         # DONE first (newest), RUNNING below
-        rank = {"RUNNING": 2, "DONE": 1}
+        rank = {"DONE": 2, "RUNNING": 1}
         filtered.sort(
             key=lambda x: (rank.get(x["status"], 0), x["updated"] or datetime.min.replace(tzinfo=timezone.utc)),
             reverse=True

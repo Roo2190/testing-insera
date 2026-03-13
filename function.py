@@ -33,14 +33,6 @@ BATCH_SIZE = 15
 storage_client = storage.Client() 
 genai_client = genai.Client( vertexai=True, project=PROJECT_ID, location=LOCATION, ) 
 
-
-def create_run_marker(invoice_name, with_total_container, run_id=None):
-    run_id = run_id or uuid.uuid4().hex
-    prefix = TMP_PREFIX.rstrip("/")
-    run_prefix = f"{prefix}/{run_id}"
-    _save_run_meta(run_prefix, invoice_name, with_total_container)
-    return run_prefix
-
 # ============================== # JSON SAFE PARSER # ============================== 
 def _parse_json_safe(raw_text):
     if not raw_text:
@@ -1340,42 +1332,13 @@ def _convert_to_csv(invoice_name, rows):
 # MAIN RUN OCR
 # ==============================
 
-def _normalize_inv_spart_item_no(value):
-    """
-    Gabungkan whitespace di item code OCR.
-    Contoh:
-    - 'BAXVLPLG38802 OR' -> 'BAXVLPLG38802OR'
-    - ' BAXV LP LG38802   OR ' -> 'BAXVLPLG38802OR'
-    """
-    if value is None:
-        return "null"
-
-    s = str(value).strip()
-
-    if s == "" or s.lower() == "null":
-        return "null"
-
-    # hapus semua whitespace: spasi, tab, newline, non-breaking space, dll
-    s = re.sub(r"[\s\u00A0]+", "", s)
-
-    return s
-
-
-def _postprocess_inv_spart_item_no(rows: list):
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        row["inv_spart_item_no"] = _normalize_inv_spart_item_no(
-            row.get("inv_spart_item_no")
-        )
-
 def run_ocr(invoice_name, uploaded_pdf_paths, with_total_container):
 
-    if not run_prefix:
-        run_id = uuid.uuid4().hex
-        prefix = TMP_PREFIX.rstrip("/")
-        run_prefix = f"{prefix}/{run_id}"
-        _save_run_meta(run_prefix, invoice_name, with_total_container)
+    run_id = uuid.uuid4().hex  # atau [:8] kalau mau lebih pendek
+    prefix = TMP_PREFIX.rstrip("/")
+    run_prefix = f"{prefix}/{run_id}"
+
+    _save_run_meta(run_prefix, invoice_name, with_total_container)
 
     bucket = storage_client.bucket(BUCKET_NAME)
 
@@ -1477,8 +1440,6 @@ def run_ocr(invoice_name, uploaded_pdf_paths, with_total_container):
         _ensure_all_detail_keys(all_rows)
 
         _apply_header_to_rows(all_rows, header_obj)
-
-        _postprocess_inv_spart_item_no(all_rows)
 
         # 0) reset match fields (Gemini tidak validasi)
         _reset_match_fields(all_rows)
