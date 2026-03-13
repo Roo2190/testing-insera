@@ -7,6 +7,7 @@ import os
 import re
 from datetime import datetime, timezone, timedelta
 import json
+from threading import Thread
 
 st.set_page_config(layout="wide")
 
@@ -68,6 +69,24 @@ menu = st.sidebar.radio("Menu", ["Upload", "Report"])
 storage_client = storage.Client()
 bucket = storage_client.bucket(BUCKET_NAME)
 
+def _run_ocr_background(invoice_name, pdf_paths, with_total_container):
+    try:
+        run_ocr(
+            invoice_name=invoice_name,
+            uploaded_pdf_paths=pdf_paths,
+            with_total_container=with_total_container
+        )
+    except Exception as e:
+        print(f"[OCR BACKGROUND ERROR] {e}")
+    finally:
+        # cleanup file temp local
+        for p in pdf_paths:
+            try:
+                if os.path.exists(p):
+                    os.remove(p)
+            except Exception:
+                pass
+
 if menu == "Upload":
 
     st.subheader("Upload Documents")
@@ -107,13 +126,20 @@ if menu == "Upload":
                 tmp.close()
                 pdf_paths.append(tmp.name)
 
-            run_ocr(
-                invoice_name=output_name or invoice.name.replace('.pdf',''),
-                uploaded_pdf_paths=pdf_paths,
-                with_total_container=with_total_container
-            )
+            job_invoice_name = output_name or invoice.name.replace('.pdf', '')
 
-            st.success("OCR selesai diproses")
+            t = Thread(
+                target=_run_ocr_background,
+                kwargs={
+                    "invoice_name": job_invoice_name,
+                    "pdf_paths": pdf_paths,
+                    "with_total_container": with_total_container,
+                },
+                daemon=True,
+            )
+            t.start()
+
+            st.success("OCR mulai diproses. Silakan buka halaman Report untuk melihat status RUNNING.")
 
 if menu == "Report":
 
