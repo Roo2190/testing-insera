@@ -97,61 +97,61 @@ if menu == "Upload":
 
     output_name = st.text_input("Output file name (default invoice name)")
 
-        if st.button("Extract"):
+    if st.button("Extract"):
 
-            if not invoice or not packing:
-                st.warning("Invoice dan Packing List wajib diupload")
+        if not invoice or not packing:
+            st.warning("Invoice dan Packing List wajib diupload")
 
-            else:
-                with_total_container = bool(bl and coo)
+        else:
+            with_total_container = bool(bl and coo)
 
-                files_to_process = [invoice, packing]
+            files_to_process = [invoice, packing]
 
-                if bl:
-                    files_to_process.append(bl)
-                if coo:
-                    files_to_process.append(coo)
+            if bl:
+                files_to_process.append(bl)
+            if coo:
+                files_to_process.append(coo)
 
-                if (bl or coo) and not with_total_container:
-                    st.info("BL/COO tidak lengkap, sistem tetap menghasilkan DETAIL (Invoice+PL+dokumen yang ada). Total/Container tidak dibuat.")
+            if (bl or coo) and not with_total_container:
+                st.info("BL/COO tidak lengkap, sistem tetap menghasilkan DETAIL (Invoice+PL+dokumen yang ada). Total/Container tidak dibuat.")
 
-                pdf_paths = []
+            pdf_paths = []
 
-                for f in files_to_process:
-                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    tmp.write(f.read())
-                    tmp.close()
-                    pdf_paths.append(tmp.name)
+            for f in files_to_process:
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                tmp.write(f.read())
+                tmp.close()
+                pdf_paths.append(tmp.name)
 
-                final_invoice_name = (output_name or invoice.name.replace(".pdf", "")).strip()
+            final_invoice_name = (output_name or invoice.name.replace(".pdf", "")).strip()
 
+            try:
+                # bikin marker RUNNING lebih dulu supaya Report langsung bisa baca status
+                create_running_markers(final_invoice_name, with_total_container)
+
+                # jalankan OCR di process terpisah
+                _launch_ocr_process(
+                    invoice_name=final_invoice_name,
+                    pdf_paths=pdf_paths,
+                    with_total_container=with_total_container
+                )
+
+                st.success("OCR sedang diproses. Silakan cek menu Report untuk status RUNNING / DONE.")
+
+            except Exception as e:
                 try:
-                    # bikin marker RUNNING lebih dulu supaya Report langsung bisa baca status
-                    create_running_markers(final_invoice_name, with_total_container)
+                    delete_running_markers(final_invoice_name, with_total_container)
+                except Exception:
+                    pass
 
-                    # jalankan OCR di process terpisah
-                    _launch_ocr_process(
-                        invoice_name=final_invoice_name,
-                        pdf_paths=pdf_paths,
-                        with_total_container=with_total_container
-                    )
-
-                    st.success("OCR sedang diproses. Silakan cek menu Report untuk status RUNNING / DONE.")
-
-                except Exception as e:
+                for p in pdf_paths:
                     try:
-                        delete_running_markers(final_invoice_name, with_total_container)
+                        if os.path.exists(p):
+                            os.remove(p)
                     except Exception:
                         pass
 
-                    for p in pdf_paths:
-                        try:
-                            if os.path.exists(p):
-                                os.remove(p)
-                        except Exception:
-                            pass
-
-                    st.error(f"Gagal memulai OCR: {e}")
+                st.error(f"Gagal memulai OCR: {e}")
 
 if menu == "Report":
 
