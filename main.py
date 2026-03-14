@@ -17,43 +17,38 @@ st.markdown("""
     section[data-testid="stSidebar"] * {
         font-size: 18px !important;
     }
+
     .main-title {
         font-size: 42px;
         font-weight: 700;
         margin-bottom: 10px;
     }
-</style>
-""", unsafe_allow_html=True)
 
-st.markdown("""
-<style>
-/* wrapper pagination */
-.pager-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
+    .pager-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
 
-/* Target tombol Prev/Next dengan key: btn_prev / btn_next */
-div[data-testid="stButton"] button[kind="secondary"] {
-  height: 42px !important;
-  padding: 0 18px !important;
-  border-radius: 10px !important;
-  font-size: 16px !important;
-  white-space: nowrap !important;
-}
+    div[data-testid="stButton"] button[kind="secondary"] {
+      height: 42px !important;
+      padding: 0 18px !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+      white-space: nowrap !important;
+    }
 
-/* selectbox lebar & tinggi konsisten */
-div.pager-select div[data-baseweb="select"] > div {
-  min-height: 42px !important;
-  border-radius: 10px !important;
-  font-size: 16px !important;
-}
-div.pager-select {
-  min-width: 110px;
-}
+    div.pager-select div[data-baseweb="select"] > div {
+      min-height: 42px !important;
+      border-radius: 10px !important;
+      font-size: 16px !important;
+    }
+
+    div.pager-select {
+      min-width: 110px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -155,7 +150,15 @@ if menu == "Upload":
 
 if menu == "Report":
 
-    st.subheader("Download OCR Result")
+    top_left, top_right = st.columns([8, 1.3])
+
+    with top_left:
+        st.subheader("Download OCR Result")
+
+    with top_right:
+        st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+        if st.button("↻ Refresh", key="btn_refresh_report", use_container_width=True):
+            st.rerun()
 
     report_type = st.selectbox(
         "Pilih Report",
