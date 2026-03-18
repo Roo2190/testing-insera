@@ -85,10 +85,10 @@ if menu == "Upload":
 
     st.subheader("Upload Documents")
 
-    invoice = st.file_uploader("Invoice*", type="pdf")
-    packing = st.file_uploader("Packing List*", type="pdf")
-    bl = st.file_uploader("Bill of Lading", type="pdf")
-    coo = st.file_uploader("COO", type="pdf")
+    invoice = st.file_uploader("Invoice*", type=["pdf", "xlsx", "xls"])
+    packing = st.file_uploader("Packing List*", type=["pdf", "xlsx", "xls"])
+    bl = st.file_uploader("Bill of Lading", type=["pdf", "xlsx", "xls"])
+    coo = st.file_uploader("COO", type=["pdf", "xlsx", "xls"])
 
     output_name = st.text_input("Output file name (default invoice name)")
 
