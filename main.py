@@ -128,6 +128,8 @@ if menu == "Upload":
                 tmp.close()
                 pdf_paths.append(tmp.name)
 
+            #butuh diubah menjadi base_name = os.path.splitext(invoice.name)[0]
+            #final_invoice_name = (output_name or base_name).strip()
             final_invoice_name = (output_name or invoice.name.replace(".pdf", "")).strip()
 
             try:
